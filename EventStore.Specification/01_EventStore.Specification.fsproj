@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>EventStore.Specification</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Language.fs" />
+    <Compile Include="Operations.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Event.Specification\00_Event.Specification.fsproj" />
+  </ItemGroup>
+
+</Project>
