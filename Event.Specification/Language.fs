@@ -1,4 +1,4 @@
-﻿namespace Event
+﻿namespace EventStore.Core
 
 module Language =
 
@@ -9,8 +9,10 @@ module Language =
     type MetaData  = MetaData  of string
     type EventType = EventType of string
 
+    type EventId   = string
+
     type Event = {
-        Id        : string
+        Id        : EventId
         Data      : Data
         MetaData  : MetaData
         EventType : EventType

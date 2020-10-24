@@ -4,14 +4,13 @@ open EventStore.Operations
 
 module Connection =
 
-
-    let create    :  Create    = fun request    -> async { return Error "not implemented" }
-    let terminate :  Terminate = fun connection -> async { return Error "not implemented" }
+    let create    : Create    = fun request    -> async { return Error "not implemented" }
+    let terminate : Terminate = fun connection -> async { return Error "not implemented" }
      
-    let readStreamEventsBackwardAsync : ReadStreamEventsBackward =
+    //let readStreamEventsBackward : ReadStreamEventsBackward =
     
-        fun stream startIndex count -> async { return Error "not implemented" }
+    //    fun stream startIndex count -> async { return Error "not implemented" }
 
-    let appendToStream : AppendToStream =
+    //let appendToStream : AppendToStream =
 
-        fun stream event -> async { return Error "not implemented" }
+    //    fun stream event -> async { return Error "not implemented" }

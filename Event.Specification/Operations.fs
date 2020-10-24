@@ -1,4 +1,4 @@
-﻿namespace Event
+﻿namespace EventStore.Core
 
 open Language
 

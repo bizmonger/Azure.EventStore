@@ -1,6 +1,6 @@
 ﻿namespace EventStore
 
-open Event.Language
+open EventStore.Core.Language
 
 module Language =
 
@@ -12,14 +12,16 @@ module Language =
     type StartIndex = int64
     type Count      = int
 
+    type ConnectionString = string
+
     type Connection = {
-        AppendToStreamAsync      : Stream -> Event -> AsyncResult<unit, ErrorDescription>
-        ReadStreamEventsBackward : Stream -> StartIndex -> Count -> AsyncResult<Event seq, ErrorDescription>
+        Context                  : obj
+        ConnectionString         : ConnectionString
+        AppendToStreamAsync      : Stream -> Event               -> AsyncResult<unit      , ErrorDescription>
+        ReadStreamEventsBackward : Stream -> StartIndex -> Count -> AsyncResult<Event seq , ErrorDescription>
     }
 
-    type Endpoint = string
-
     type ConnectionRequest = {
-        Endpoint   : Endpoint
-        Credential : Credential
+        ConnectionString : ConnectionString
+        Credential       : Credential
     }
