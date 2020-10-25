@@ -1,11 +1,10 @@
-﻿namespace Azure.EventStore
+﻿namespace Azure
 
 open System.Net
 open Microsoft.WindowsAzure.Storage
 open Microsoft.WindowsAzure.Storage.Table
-open EventStore.Operations
 
-module AzureTable =
+module Table =
 
     type ConnectionString = ConnectionString of string
     type Table            = Table            of string
@@ -59,7 +58,7 @@ module AzureTable =
             let pKey,rKey = PartitionKey entity.PartitionKey, RowKey entity.RowKey
 
             match! cloudTable |> findEntity pKey rKey |> Async.AwaitTask with
-            | None -> return Error <| sprintf "Entity not found: %A" entity
+            | None   -> return Error <| sprintf "Entity not found: %A" entity
             | Some _ ->
 
                 let  operation = TableOperation.Replace(entity)
@@ -70,7 +69,7 @@ module AzureTable =
                 else return Error <| sprintf "%i: Failed to update entity" result.HttpStatusCode
         }
 
-    let internal create (entity:TableEntity) (connectionstring:ConnectionString) (tableName:string) =
+    let create (entity:TableEntity) (connectionstring:ConnectionString) (tableName:string) =
 
         async {
         

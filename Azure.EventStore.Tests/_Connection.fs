@@ -3,6 +3,17 @@ module Azure.EventStore.Tests
 open NUnit.Framework
 
 open Azure.EventStore.TestAPI.Mock
+open Azure
+
+let teardown connection =
+
+    async {
+
+        match! connection |> EventStore.tryTerminate with
+        | Error msg -> failwith msg
+        | Ok _      -> ()
+            
+    } |> Async.RunSynchronously
 
 [<Test>]
 let ``Integration: Create connection`` () =
@@ -12,10 +23,10 @@ let ``Integration: Create connection`` () =
         // Test
         match! someConnectionRequest |> EventStore.tryConnect with
         | Error msg -> failwith msg
-        | Ok _ -> 
+        | Ok connection -> 
         
-        // Teardown
-        ()
+            // Teardown
+            teardown connection
 
     } |> Async.RunSynchronously
 
@@ -32,7 +43,16 @@ let ``Integration: Terminate connection`` () =
             // Test
             match! connection |> EventStore.tryTerminate with
             | Error msg -> failwith msg
-            | Ok _      -> ()
+            | Ok _      ->
+
+                // Teardown
+                async {
+
+                    match! connection |> EventStore.tryTerminate with
+                    | Error msg -> failwith msg
+                    | Ok _      -> ()
+                        
+                } |> Async.RunSynchronously
 
     } |> Async.RunSynchronously
 
@@ -45,18 +65,14 @@ let ``Integration: Append event`` () =
         match! someConnectionRequest |> EventStore.tryConnect with
         | Error msg     -> Assert.Fail msg
         | Ok connection -> 
-        
+             
             async {
 
-                match! someStream |> EventStore.tryAppend someEvent with
-                | Error msg -> Assert.Fail msg
-                | Ok _      -> ()
-            
-            } |> Async.RunSynchronously
+                // Test
+                match! connection.AppendToStreamAsync someStream someEvent with
+                | Error msg -> failwith msg
+                | Ok _      -> teardown connection
 
-            // Teardown
-            match! connection |> EventStore.tryTerminate with
-            | Error msg -> failwith msg
-            | Ok _      -> ()
+            } |> Async.RunSynchronously
 
     } |> Async.RunSynchronously

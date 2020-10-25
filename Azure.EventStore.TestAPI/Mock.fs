@@ -5,11 +5,11 @@ open EventStore.Language
 
 module Mock =
 
-    let someEndpoint    = "some_endpoint"
-    let someCrecdential = { Username= "some_username"; Password= "some_password"}
+    let someConnectionString = "UseDevelopmentStorage=true"
+    let someCrecdential      = { Username= "some_username"; Password= "some_password"}
 
     let someConnectionRequest : ConnectionRequest = {
-        ConnectionString   = someEndpoint
+        ConnectionString   = someConnectionString
         Credential         = someCrecdential
     }
 

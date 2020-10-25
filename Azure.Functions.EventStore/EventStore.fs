@@ -1,36 +1,12 @@
-﻿
-module EventStore
+﻿namespace Azure
+
+module EventStore =
 
     open Microsoft.WindowsAzure.Storage
     open EventStore.Operations
     open EventStore.Language
-
-    let tryConnect : Create =
-
-        fun request -> 
-        
-            async {
-            
-                try
-                    //let storageAccount   = CloudStorageAccount.Parse request.ConnectionString
-                    //let cloudTableClient = storageAccount.CreateCloudTableClient()
-
-                    //if obj.ReferenceEquals(cloudTableClient, null) then
-                    //    return Error "Connection failed" 
-
-                    //else 
-
-                        let result : Connection = { 
-                            Context                  = obj() //cloudTableClient
-                            ConnectionString         = request.ConnectionString
-                            AppendToStreamAsync      = fun _ _   -> async { return Error "not implemented" }
-                            ReadStreamEventsBackward = fun _ _ _ -> async { return Error "not implemented" }
-                        }
-
-                        return Ok result
-
-                with ex -> return Error <| ex.GetBaseException().Message
-            }
+    open Azure
+    open Microsoft.WindowsAzure.Storage.Table
 
     let tryTerminate : Terminate =
 
@@ -49,4 +25,46 @@ module EventStore
 
     let tryAppend : AppendToStream =
 
-        fun _ _ -> async { return Error "not implemented" }
+        fun stream event -> 
+        
+            async { 
+
+                return Error "not implemented"
+            
+                //let entity = TableEntity() 
+                //Table.create 
+                //return Error "not implemented" 
+                
+            }
+
+    let tryConnect : Create =
+
+        fun request -> 
+        
+            async {
+            
+                try
+                    let storageAccount   = CloudStorageAccount.Parse request.ConnectionString
+                    let cloudTableClient = storageAccount.CreateCloudTableClient()
+
+                    if obj.ReferenceEquals(cloudTableClient, null) then
+                        return Error "Connection failed" 
+
+                    else 
+
+                        let result : Connection = { 
+                            Context                  = cloudTableClient
+                            ConnectionString         = request.ConnectionString
+                            AppendToStreamAsync      = tryAppend
+                            ReadStreamEventsBackward = fun _ _ _ -> async { return Error "not implemented" }
+                            Terminate                = tryTerminate
+                        }
+
+                        return Ok result
+
+                with ex -> return Error <| ex.GetBaseException().Message
+            }
+
+    let tryReadBackwards : ReadStreamEventsBackward =
+
+        fun _ _ _ -> async { return Error "not implemented" }
