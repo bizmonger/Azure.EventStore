@@ -2,6 +2,10 @@
 
 open Microsoft.WindowsAzure.Storage.Table
 
-module Entities =
+type StreamEntity(name:string) =
 
-    let foo() = ()
+    inherit TableEntity()
+
+type EventEntity(name:string) =
+
+    inherit TableEntity()

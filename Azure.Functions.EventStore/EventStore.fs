@@ -1,12 +1,15 @@
 ﻿namespace Azure
 
+open System
+open EventStore.Core.Language
+
 module EventStore =
 
     open Microsoft.WindowsAzure.Storage
+    open Microsoft.WindowsAzure.Storage.Table
     open EventStore.Operations
     open EventStore.Language
     open Azure
-    open Microsoft.WindowsAzure.Storage.Table
 
     let tryTerminate : Terminate =
 
@@ -23,17 +26,38 @@ module EventStore =
             
             }
 
+    let private create (connectionString:string) (v:TableEntity*string) =
+
+        let entity,tableName = v
+
+        async {
+       
+            match! tableName |> Table.create entity (Azure.Table.ConnectionString connectionString) with
+            | Error msg -> return Error msg
+            | Ok _      -> return Ok ()
+        }
+
     let tryAppend : AppendToStream =
 
-        fun stream event -> 
+        fun (Stream stream) event connectionString -> 
         
-            async { 
-
-                return Error "not implemented"
+            async {
             
-                //let entity = TableEntity() 
-                //Table.create 
-                //return Error "not implemented" 
+                try
+
+                    let streamEntity = StreamEntity(stream,  PartitionKey="Stream", RowKey=stream)
+                    let eventEntity  = EventEntity(event.Id, PartitionKey="Event" , RowKey=Guid.NewGuid().ToString())
+
+
+                    match! "Stream" |> Table.create streamEntity (Azure.Table.ConnectionString connectionString) with
+                    | Error msg -> return Error msg
+                    | Ok _      -> 
+
+                        match! "Event" |> Table.create eventEntity (Azure.Table.ConnectionString connectionString) with
+                        | Error msg -> return Error msg
+                        | Ok _      -> return Ok ()
+
+                with ex -> return Error <| ex.GetBaseException().Message
                 
             }
 
@@ -51,13 +75,9 @@ module EventStore =
                         return Error "Connection failed" 
 
                     else 
-
                         let result : Connection = { 
                             Context                  = cloudTableClient
                             ConnectionString         = request.ConnectionString
-                            AppendToStreamAsync      = tryAppend
-                            ReadStreamEventsBackward = fun _ _ _ -> async { return Error "not implemented" }
-                            Terminate                = tryTerminate
                         }
 
                         return Ok result
@@ -67,4 +87,4 @@ module EventStore =
 
     let tryReadBackwards : ReadStreamEventsBackward =
 
-        fun _ _ _ -> async { return Error "not implemented" }
+        fun _ _ _ _ -> async { return Error "not implemented" }

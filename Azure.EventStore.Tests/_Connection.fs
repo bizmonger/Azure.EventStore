@@ -69,7 +69,7 @@ let ``Integration: Append event`` () =
             async {
 
                 // Test
-                match! connection.AppendToStreamAsync someStream someEvent with
+                match! EventStore.tryAppend someStream someEvent someConnectionString with
                 | Error msg -> failwith msg
                 | Ok _      -> teardown connection
 

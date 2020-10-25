@@ -17,9 +17,9 @@ module Language =
     type Connection = {
         Context                  : obj
         ConnectionString         : ConnectionString
-        AppendToStreamAsync      : Stream -> Event               -> AsyncResult<EventId   , ErrorDescription>
-        ReadStreamEventsBackward : Stream -> StartIndex -> Count -> AsyncResult<Event seq , ErrorDescription>
-        Terminate                : Connection                    -> AsyncResult<unit      , ErrorDescription>
+        //AppendToStreamAsync      : Stream -> Event -> ConnectionString -> AsyncResult<unit      , ErrorDescription>
+        //ReadStreamEventsBackward : Stream -> StartIndex -> Count       -> AsyncResult<Event seq , ErrorDescription>
+        //Terminate                : Connection                          -> AsyncResult<unit      , ErrorDescription>
     }
 
     type ConnectionRequest = {
