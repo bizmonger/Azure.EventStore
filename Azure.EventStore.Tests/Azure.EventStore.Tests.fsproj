@@ -10,8 +10,8 @@
   <ItemGroup>
     <PackageReference Include="FsUnit" Version="4.0.1" />
     <PackageReference Include="NUnit" Version="3.12.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.16.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.17.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +23,10 @@
     <ProjectReference Include="..\Azure.EventStore.TestAPI\Azure.EventStore.TestAPI.fsproj" />
     <ProjectReference Include="..\Azure.Functions.EventStore\Azure.EventStore.fsproj" />
     <ProjectReference Include="..\EventStore.Specification\01_EventStore.Specification.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="5.0.0" />
   </ItemGroup>
 
 </Project>

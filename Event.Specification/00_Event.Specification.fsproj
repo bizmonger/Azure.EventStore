@@ -9,4 +9,8 @@
     <Compile Include="Operations.fs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="5.0.0" />
+  </ItemGroup>
+
 </Project>

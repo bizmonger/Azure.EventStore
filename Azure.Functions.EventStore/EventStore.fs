@@ -48,7 +48,6 @@ module EventStore =
                     let streamEntity = StreamEntity(stream,  PartitionKey="Stream", RowKey=stream)
                     let eventEntity  = EventEntity(event.Id, PartitionKey="Event" , RowKey=Guid.NewGuid().ToString())
 
-
                     match! "Stream" |> Table.create streamEntity (Azure.Table.ConnectionString connectionString) with
                     | Error msg -> return Error msg
                     | Ok _      -> 

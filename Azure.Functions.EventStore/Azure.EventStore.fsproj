@@ -19,4 +19,8 @@
     <ProjectReference Include="..\EventStore.Specification\01_EventStore.Specification.fsproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="5.0.0" />
+  </ItemGroup>
+
 </Project>
