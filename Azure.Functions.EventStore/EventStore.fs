@@ -44,17 +44,21 @@ module EventStore =
             async {
             
                 try
-
                     let streamEntity = StreamEntity(stream,  PartitionKey="Stream", RowKey=stream)
                     let eventEntity  = EventEntity(event.Id, PartitionKey="Event" , RowKey=Guid.NewGuid().ToString())
+                    let addEntry     = create connectionString
 
-                    match! "Stream" |> Table.create streamEntity (Azure.Table.ConnectionString connectionString) with
-                    | Error msg -> return Error msg
-                    | Ok _      -> 
+                    let isError = function | Ok _ -> false | Error _ -> true
 
-                        match! "Event" |> Table.create eventEntity (Azure.Table.ConnectionString connectionString) with
-                        | Error msg -> return Error msg
-                        | Ok _      -> return Ok ()
+                    let! ops = [addEntry (streamEntity :> TableEntity, "Stream")
+                                addEntry (eventEntity  :> TableEntity, "Event" )
+                               ] |> Async.Parallel
+
+                    return
+                        ops |> Array.exists isError
+                            |> function
+                               | true  -> Error <| sprintf "Failed to append event to stream:%s %s" event.Id stream
+                               | false -> Ok ()
 
                 with ex -> return Error <| ex.GetBaseException().Message
                 
