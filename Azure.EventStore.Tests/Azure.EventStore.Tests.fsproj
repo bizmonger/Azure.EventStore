@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <Compile Include="_Connection.fs" />
+    <Compile Include="_Store.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

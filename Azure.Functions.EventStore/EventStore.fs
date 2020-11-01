@@ -53,7 +53,7 @@ module EventStore =
                                                              Stream= stream,
                                                              Data=   json)
 
-                    let addEntry     = create connectionString
+                    let addEntry = create connectionString
 
                     let isError = function | Ok _ -> false | Error _ -> true
 
