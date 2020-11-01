@@ -9,3 +9,8 @@ type StreamEntity(name:string) =
 type EventEntity(name:string) =
 
     inherit TableEntity()
+
+    member val Stream    = "" with get,set
+    member val Data      = "" with get,set
+    member val MetaData  = "" with get,set
+    member val EventType = "" with get,set

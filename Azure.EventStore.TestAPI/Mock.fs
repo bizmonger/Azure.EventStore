@@ -14,9 +14,7 @@ module Mock =
     }
 
     let someStream = EventStore.Core.Language.Stream "some_stream"
-    let someEvent : EventStore.Core.Language.Event = {
+    let someEvent  : EventStore.Core.Language.Event = {
         Id        = "some_event_id"
-        Data      = Data      <| JSON ""
-        MetaData  = MetaData  <| ""
-        EventType = EventType <| ""
+        Data      = Data <| JSON "some json"
     }

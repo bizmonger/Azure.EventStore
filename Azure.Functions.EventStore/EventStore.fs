@@ -42,10 +42,17 @@ module EventStore =
         fun (Stream stream) event connectionString -> 
         
             async {
+
+                let (Data data) = event.Data
+                let (JSON json) = data
             
                 try
                     let streamEntity = StreamEntity(stream,  PartitionKey="Stream", RowKey=stream)
-                    let eventEntity  = EventEntity(event.Id, PartitionKey="Event" , RowKey=Guid.NewGuid().ToString())
+                    let eventEntity  = EventEntity(event.Id, PartitionKey="Event" , 
+                                                             RowKey= Guid.NewGuid().ToString(),
+                                                             Stream= stream,
+                                                             Data=   json)
+
                     let addEntry     = create connectionString
 
                     let isError = function | Ok _ -> false | Error _ -> true
@@ -61,7 +68,6 @@ module EventStore =
                                | false -> Ok ()
 
                 with ex -> return Error <| ex.GetBaseException().Message
-                
             }
 
     let tryConnect : Create =
