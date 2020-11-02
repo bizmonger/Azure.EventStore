@@ -1,15 +1,14 @@
 ﻿namespace Azure
 
 open System
+open Microsoft.WindowsAzure.Storage
+open Microsoft.WindowsAzure.Storage.Table
 open EventStore.Core.Language
+open EventStore.Operations
+open EventStore.Language
+open Azure.Storage
 
 module EventStore =
-
-    open Microsoft.WindowsAzure.Storage
-    open Microsoft.WindowsAzure.Storage.Table
-    open EventStore.Operations
-    open EventStore.Language
-    open Azure
 
     let tryTerminate : Terminate =
 
@@ -32,7 +31,7 @@ module EventStore =
 
         async {
        
-            match! tableName |> Table.create entity (Azure.Table.ConnectionString connectionString) with
+            match! tableName |> create entity (ConnectionString connectionString) with
             | Error msg -> return Error msg
             | Ok _      -> return Ok ()
         }

@@ -4,7 +4,7 @@ open System.Net
 open Microsoft.WindowsAzure.Storage
 open Microsoft.WindowsAzure.Storage.Table
 
-module Table =
+module Storage =
 
     type ConnectionString = ConnectionString of string
     type Table            = Table            of string
@@ -86,3 +86,45 @@ module Table =
                 then return Ok ()
                 else return Error <| result.HttpStatusCode.ToString()
         }
+
+    let deleteEntity<'T when 'T :> TableEntity> (PartitionKey partitionKey) (RowKey rowKey) (cloudTable:CloudTable) =
+
+        async {
+        
+            let  operation      = TableOperation.Retrieve<'T>(partitionKey, rowKey)
+            let! retrieveResult = cloudTable.ExecuteAsync(operation) |> Async.AwaitTask
+
+            if retrieveResult.Result <> null then
+
+                 let  entity    = retrieveResult.Result :?> 'T
+                 let  operation = TableOperation.Delete entity
+                 let! result    = cloudTable.ExecuteAsync(operation) |> Async.AwaitTask
+
+                 if result.HttpStatusCode = (int)HttpStatusCode.NoContent
+                 then return Ok ()
+                 else return Error <| sprintf "%i: Failed to delete entity" result.HttpStatusCode
+        
+            else 
+                 return Error <| sprintf "Failed to delete %s::%s" partitionKey rowKey
+
+        } |> Async.StartAsTask
+
+    let deleteEntities<'T when 'T :> TableEntity> (PartitionKey partitionKey) (cloudTable:CloudTable) =
+
+        async {
+            
+            let batchOperation = TableBatchOperation()
+            let filter         = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey)
+                            
+            let  rowKeyItem = System.Collections.Generic.List<string>(seq ["RowKey"])
+            let  query      = TableQuery<DynamicTableEntity>().Where(filter).Select(rowKeyItem)
+            let! result     = cloudTable.ExecuteQuerySegmentedAsync<_>(query, null) |> Async.AwaitTask
+
+            for item in result  do
+                batchOperation.Delete item
+        
+            do! cloudTable.ExecuteBatchAsync(batchOperation) |> Async.AwaitTask |> Async.Ignore
+
+            return Ok ()
+
+        } |> Async.StartAsTask
