@@ -30,10 +30,13 @@ module EventStore =
         let entity,tableName = v
 
         async {
-       
-            match! tableName |> create entity (ConnectionString connectionString) with
-            | Error msg -> return Error msg
-            | Ok _      -> return Ok ()
+
+            try
+                match! tableName |> create entity (ConnectionString connectionString) with
+                | Error msg -> return Error msg
+                | Ok _      -> return Ok ()
+
+            with ex -> return Error <| ex.GetBaseException().Message
         }
 
     let tryAppend : AppendToStream =
@@ -63,7 +66,7 @@ module EventStore =
                     return
                         ops |> Array.exists isError
                             |> function
-                               | true  -> Error <| sprintf "Failed to append event to stream:%s %s" event.Id stream
+                               | true  -> Error <| sprintf "Failed to append event to stream: %s %s" event.Id stream
                                | false -> Ok ()
 
                 with ex -> return Error <| ex.GetBaseException().Message

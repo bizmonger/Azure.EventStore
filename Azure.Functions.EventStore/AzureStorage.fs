@@ -113,18 +113,21 @@ module Storage =
 
         async {
             
-            let batchOperation = TableBatchOperation()
-            let filter         = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey)
+            try
+                let batchOperation = TableBatchOperation()
+                let filter         = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey)
                             
-            let  rowKeyItem = System.Collections.Generic.List<string>(seq ["RowKey"])
-            let  query      = TableQuery<DynamicTableEntity>().Where(filter).Select(rowKeyItem)
-            let! result     = cloudTable.ExecuteQuerySegmentedAsync<_>(query, null) |> Async.AwaitTask
+                let  rowKeyItem = System.Collections.Generic.List<string>(seq ["RowKey"])
+                let  query      = TableQuery<DynamicTableEntity>().Where(filter).Select(rowKeyItem)
+                let! result     = cloudTable.ExecuteQuerySegmentedAsync<_>(query, null) |> Async.AwaitTask
 
-            for item in result  do
-                batchOperation.Delete item
+                for item in result  do
+                    batchOperation.Delete item
         
-            do! cloudTable.ExecuteBatchAsync(batchOperation) |> Async.AwaitTask |> Async.Ignore
+                do! cloudTable.ExecuteBatchAsync(batchOperation) |> Async.AwaitTask |> Async.Ignore
 
-            return Ok ()
+                return Ok ()
+
+            with ex -> return Error <| ex.GetBaseException().Message
 
         } |> Async.StartAsTask

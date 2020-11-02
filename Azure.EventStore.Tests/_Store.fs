@@ -1,14 +1,28 @@
 ﻿module _Store
 
 open NUnit.Framework
-open FsUnit
-open Azure.EventStore.TestAPI.Mock
 open Azure
+open Azure.EventStore.TestAPI
+open Azure.EventStore.TestAPI.Mock
+open Azure.Storage
 
-let teardown() =
+[<SetUp>]
+let setup() = 
 
-    () // TODO...
+    seq [Table "Event" , PartitionKey "Event"
+         Table "Stream", PartitionKey "Stream"
 
+        ] |> Seq.iter (fun v -> async { do! Teardown.execute v } |> Async.RunSynchronously)
+
+[<TearDown>]
+let teardown() = 
+
+            seq [Table "Event" , PartitionKey "Event"
+                 Table "Stream", PartitionKey "Stream"
+
+                ] |> Seq.iter (fun v -> async { do! Teardown.execute v } |> Async.RunSynchronously)
+    
+[<Test>]
 let ``Add event to EventStore`` () =
 
     async {
@@ -16,10 +30,11 @@ let ``Add event to EventStore`` () =
         // Test
         match! someConnectionString |> EventStore.tryAppend someStream someEvent with
         | Error msg -> failwith msg
-        | Ok _      -> teardown()
+        | Ok _      -> ()
     
     } |> Async.RunSynchronously
 
+[<Test>]
 let ``Read event from EventStore`` () =
 
     async {

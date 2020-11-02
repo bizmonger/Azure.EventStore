@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <Compile Include="Connection.fs" />
-    <Compile Include="AzureTable.fs" />
+    <Compile Include="AzureStorage.fs" />
     <Compile Include="AzureEntities.fs" />
     <Compile Include="EventStore.fs" />
   </ItemGroup>
