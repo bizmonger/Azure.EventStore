@@ -98,4 +98,8 @@ module EventStore =
 
     let tryReadBackwards : ReadStreamEventsBackward =
 
-        fun _ _ _ _ -> async { return Error "not implemented" }
+        fun stream startIndex count connectionString -> 
+
+            
+        
+            async { return Error "not implemented" }

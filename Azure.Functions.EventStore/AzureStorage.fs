@@ -51,6 +51,16 @@ module Storage =
 
         } |> Async.StartAsTask
 
+    let getEntitiesAsync<'T when 'T : (new : unit -> 'T :> TableEntity)> (storageTable:CloudTable) =
+
+        async {
+        
+            let    query = TableQuery<'T>()
+            let!   task  = storageTable.ExecuteQuerySegmentedAsync(query,null) |> Async.AwaitTask
+            return task.Results
+
+        } |> Async.StartAsTask
+
     let updateEntity (cloudTable:CloudTable) (entity:TableEntity) = 
 
         async {

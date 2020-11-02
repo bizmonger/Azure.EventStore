@@ -1,6 +1,7 @@
 ﻿module _Store
 
 open NUnit.Framework
+open FsUnit
 open Azure
 open Azure.EventStore.TestAPI
 open Azure.EventStore.TestAPI.Mock
@@ -45,6 +46,7 @@ let ``Read event from EventStore`` () =
         // Test
         match! someConnectionString |> EventStore.tryReadBackwards someStream startIndex count with
         | Error msg -> failwith msg
-        | Ok _      -> ()
+        | Ok events ->
+             events |> Seq.isEmpty |> should equal false
     
     } |> Async.RunSynchronously
