@@ -109,7 +109,7 @@ module EventStore =
             async { 
 
                 match! (Table stream) |> exists (ConnectionString connectionString) |> Async.AwaitTask with
-                | Error msg     -> return Error msg
+                | Error msg -> return Error msg
                 | Ok result ->
 
                     return

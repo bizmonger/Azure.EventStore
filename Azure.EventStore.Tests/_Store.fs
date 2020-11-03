@@ -6,13 +6,14 @@ open Azure
 open Azure.EventStore.TestAPI
 open Azure.EventStore.TestAPI.Mock
 open Azure.Storage
+open EventStore.Core.Language
 
 [<TearDown>]
 let teardown() = 
 
-        seq [Table "Event" , PartitionKey "Event"
-             Table "Stream", PartitionKey "Stream"
+        let (Stream stream) = someStream
 
+        seq [Table stream, PartitionKey "Stream"
             ] |> Seq.iter (fun v -> async { do! Teardown.execute v } |> Async.RunSynchronously)
     
 [<Test>]
@@ -35,10 +36,14 @@ let ``Read event from EventStore`` () =
         // Setup
         let startIndex, count = 0 , 1
 
-        // Test
-        match! someConnectionString |> EventStore.tryReadBackwards someStream startIndex count with
+        match! someConnectionString |> EventStore.tryAppend someStream someEvent with
         | Error msg -> failwith msg
-        | Ok events ->
-             events |> Seq.isEmpty |> should equal false
+        | Ok _      ->
+
+            // Test
+            match! someConnectionString |> EventStore.tryReadBackwards someStream startIndex count with
+            | Error msg -> failwith msg
+            | Ok events ->
+                 events |> Seq.isEmpty |> should equal false
     
     } |> Async.RunSynchronously
