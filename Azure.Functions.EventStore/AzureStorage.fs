@@ -55,9 +55,14 @@ module Storage =
 
         async {
         
-            let    query = TableQuery<'T>()
-            let!   task  = storageTable.ExecuteQuerySegmentedAsync(query,null) |> Async.AwaitTask
-            return task.Results
+            try
+
+                let    query = TableQuery<'T>()
+                let!   task  = storageTable.ExecuteQuerySegmentedAsync(query,null) |> Async.AwaitTask
+
+                return Ok task.Results
+
+            with ex -> return Error <| ex.GetBaseException().Message
 
         } |> Async.StartAsTask
 

@@ -98,8 +98,21 @@ module EventStore =
 
     let tryReadBackwards : ReadStreamEventsBackward =
 
-        fun stream startIndex count connectionString -> 
+        fun (Stream stream) startIndex count connectionString -> 
 
-            
-        
-            async { return Error "not implemented" }
+            async { 
+
+                match! (Table stream) |> ensureExists (ConnectionString connectionString) |> Async.AwaitTask with
+                | Error msg     -> return Error msg
+                | Ok cloudTable ->
+                     
+                     match! cloudTable |> getEntitiesAsync |> Async.AwaitTask with
+                     | Error msg' -> return Error msg'
+                     | Ok entities ->
+
+                        let events = 
+                            entities |> Seq.cast<EventEntity>
+                                     |> Seq.map(fun v -> { Event.Id= v.RowKey; Data= Data (JSON v.Data)})
+                     
+                        return Ok events
+            }
