@@ -9,10 +9,10 @@ module Teardown =
 
         async {
     
-            let connectionString = ConnectionString someConnectionString
+            let connection = ConnectionString someConnectionString
 
-            match! table |> ensureExists connectionString |> Async.AwaitTask with
-            | Error msg -> failwith msg
+            match! table |> ensureExists connection |> Async.AwaitTask with
+            | Error msg     -> failwith msg
             | Ok cloudTable -> 
         
                 match! cloudTable |> deleteEntities partitionKey |> Async.AwaitTask with
