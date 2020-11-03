@@ -108,20 +108,29 @@ module EventStore =
 
             async { 
 
-                match! (Table stream) |> ensureExists (ConnectionString connectionString) |> Async.AwaitTask with
+                match! (Table stream) |> exists (ConnectionString connectionString) |> Async.AwaitTask with
                 | Error msg     -> return Error msg
-                | Ok cloudTable ->
-                     
-                     match! cloudTable |> getEntitiesAsync |> Async.AwaitTask with
-                     | Error msg'  -> return Error msg'
-                     | Ok entities ->
+                | Ok result ->
 
-                        let events = 
-                            entities |> Seq.cast<EventEntity>
-                                     |> Seq.map toEvent
-                                     |> Seq.sortByDescending(fun v -> v.Timestamp)
-                                     |> Seq.skip startIndex
-                                     |> Seq.take count
+                    return
+                         result |> function
+                         | None            -> Ok <| seq []
+                         | Some cloudTable ->
                      
-                        return Ok events
+                            async {
+                            
+                                match! cloudTable |> getEntitiesAsync |> Async.AwaitTask with
+                                | Error msg'  -> return Error msg'
+                                | Ok entities ->
+
+                                   let events = 
+                                       entities |> Seq.cast<EventEntity>
+                                                |> Seq.map toEvent
+                                                |> Seq.sortByDescending(fun v -> v.Timestamp)
+                                                |> Seq.skip startIndex
+                                                |> Seq.take count
+                     
+                                   return Ok events
+
+                            } |> Async.RunSynchronously
             }

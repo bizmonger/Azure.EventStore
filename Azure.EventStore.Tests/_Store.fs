@@ -7,21 +7,13 @@ open Azure.EventStore.TestAPI
 open Azure.EventStore.TestAPI.Mock
 open Azure.Storage
 
-[<SetUp>]
-let setup() = 
-
-    seq [Table "Event" , PartitionKey "Event"
-         Table "Stream", PartitionKey "Stream"
-
-        ] |> Seq.iter (fun v -> async { do! Teardown.execute v } |> Async.RunSynchronously)
-
 [<TearDown>]
 let teardown() = 
 
-            seq [Table "Event" , PartitionKey "Event"
-                 Table "Stream", PartitionKey "Stream"
+        seq [Table "Event" , PartitionKey "Event"
+             Table "Stream", PartitionKey "Stream"
 
-                ] |> Seq.iter (fun v -> async { do! Teardown.execute v } |> Async.RunSynchronously)
+            ] |> Seq.iter (fun v -> async { do! Teardown.execute v } |> Async.RunSynchronously)
     
 [<Test>]
 let ``Add event to EventStore`` () =

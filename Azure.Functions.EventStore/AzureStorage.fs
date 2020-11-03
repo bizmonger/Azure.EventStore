@@ -11,6 +11,25 @@ module Storage =
     type PartitionKey     = PartitionKey     of string
     type RowKey           = RowKey           of string
 
+    let exists (ConnectionString connectionString) (Table tableName) =
+
+        async {
+        
+            try
+                let storageAccount   = CloudStorageAccount.Parse connectionString
+                let cloudTableClient = storageAccount.CreateCloudTableClient()
+                let cloudTable       = cloudTableClient.GetTableReference(tableName);
+
+                let! exists = cloudTable.ExistsAsync() |> Async.AwaitTask
+
+                if exists 
+                then return Ok <| Some cloudTable
+                else return Ok <| None
+
+            with ex -> return Error <| ex.GetBaseException().Message
+
+        } |> Async.StartAsTask
+
     let ensureExists (ConnectionString connectionString) (Table tableName) =
 
         async {
@@ -139,9 +158,11 @@ module Storage =
                 for item in result  do
                     batchOperation.Delete item
         
-                do! cloudTable.ExecuteBatchAsync(batchOperation) |> Async.AwaitTask |> Async.Ignore
-
-                return Ok ()
+                if batchOperation.Count = 0
+                then return Ok ()
+                else 
+                    do! cloudTable.ExecuteBatchAsync(batchOperation) |> Async.AwaitTask |> Async.Ignore
+                    return Ok ()
 
             with ex -> return Error <| ex.GetBaseException().Message
 
