@@ -9,17 +9,14 @@ module Language =
     
     type Credential = { Username : string; Password : string }
 
-    type StartIndex = int64
+    type StartIndex = int
     type Count      = int
 
     type ConnectionString = string
 
     type Connection = {
-        Context                  : obj
-        ConnectionString         : ConnectionString
-        //AppendToStreamAsync      : Stream -> Event -> ConnectionString -> AsyncResult<unit      , ErrorDescription>
-        //ReadStreamEventsBackward : Stream -> StartIndex -> Count       -> AsyncResult<Event seq , ErrorDescription>
-        //Terminate                : Connection                          -> AsyncResult<unit      , ErrorDescription>
+        Context          : obj
+        ConnectionString : ConnectionString
     }
 
     type ConnectionRequest = {

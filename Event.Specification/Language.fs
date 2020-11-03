@@ -1,5 +1,7 @@
 ﻿namespace EventStore.Core
 
+open System
+
 module Language =
 
     type JSON   = JSON   of string
@@ -9,6 +11,7 @@ module Language =
     type EventId   = string
 
     type Event = {
-        Id   : EventId
-        Data : Data
+        Id        : EventId
+        Data      : Data
+        Timestamp : DateTime
     }

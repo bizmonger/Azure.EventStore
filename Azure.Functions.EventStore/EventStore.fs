@@ -100,6 +100,12 @@ module EventStore =
 
         fun (Stream stream) startIndex count connectionString -> 
 
+            let toEvent (v:EventEntity) = { 
+                Event.Id  = v.RowKey; 
+                Data      = Data (JSON v.Data); 
+                Timestamp = v.Timestamp.DateTime
+            }
+
             async { 
 
                 match! (Table stream) |> ensureExists (ConnectionString connectionString) |> Async.AwaitTask with
@@ -107,12 +113,15 @@ module EventStore =
                 | Ok cloudTable ->
                      
                      match! cloudTable |> getEntitiesAsync |> Async.AwaitTask with
-                     | Error msg' -> return Error msg'
+                     | Error msg'  -> return Error msg'
                      | Ok entities ->
 
                         let events = 
                             entities |> Seq.cast<EventEntity>
-                                     |> Seq.map(fun v -> { Event.Id= v.RowKey; Data= Data (JSON v.Data)})
+                                     |> Seq.map toEvent
+                                     |> Seq.sortByDescending(fun v -> v.Timestamp)
+                                     |> Seq.skip startIndex
+                                     |> Seq.take count
                      
                         return Ok events
             }

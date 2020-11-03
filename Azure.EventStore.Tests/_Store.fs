@@ -41,7 +41,7 @@ let ``Read event from EventStore`` () =
     async {
 
         // Setup
-        let startIndex, count = 0L , 1
+        let startIndex, count = 0 , 1
 
         // Test
         match! someConnectionString |> EventStore.tryReadBackwards someStream startIndex count with
