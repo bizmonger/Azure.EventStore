@@ -43,7 +43,6 @@ let ``Read event from EventStore`` () =
             // Test
             match! someConnectionString |> EventStore.tryReadBackwards someStream startIndex count with
             | Error msg -> failwith msg
-            | Ok events ->
-                 events |> Seq.isEmpty |> should equal false
+            | Ok events -> events |> Seq.isEmpty |> should equal false
     
     } |> Async.RunSynchronously

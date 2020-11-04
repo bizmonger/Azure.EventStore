@@ -25,14 +25,12 @@ module EventStore =
             
             }
 
-    let private create (connectionString:string) (v:TableEntity*string) =
-
-        let entity,tableName = v
+    let private appendTo stream (entity:TableEntity) (connectionString:string) =
 
         async {
 
             try
-                match! tableName |> create entity (ConnectionString connectionString) with
+                match! stream |> create entity (ConnectionString connectionString) with
                 | Error msg -> return Error msg
                 | Ok _      -> return Ok ()
 
@@ -41,33 +39,22 @@ module EventStore =
 
     let tryAppend : AppendToStream =
 
-        fun (Stream stream) event connectionString -> 
+        fun (Stream stream) event connection -> 
         
             async {
 
-                let (Data data) = event.Data
-                let (JSON json) = data
+                let (Data      data)      = event.Data
+                let (JSON      json)      = data
+                let (EventType eventType) = event.EventType
             
                 try
-                    let streamEntity = StreamEntity(stream,  PartitionKey="Stream", RowKey=stream)
-                    let eventEntity  = EventEntity(event.Id, PartitionKey="Event" , 
-                                                             RowKey= Guid.NewGuid().ToString(),
-                                                             Stream= stream,
-                                                             Data=   json)
+                    let eventEntity  = EventEntity(PartitionKey="Event" , 
+                                                   RowKey    = Guid.NewGuid().ToString(),
+                                                   Stream    = stream,
+                                                   EventType = eventType,
+                                                   Data      = json)
 
-                    let addEntry = create connectionString
-
-                    let isError = function | Ok _ -> false | Error _ -> true
-
-                    let! ops = [addEntry (streamEntity :> TableEntity, "Stream")
-                                addEntry (eventEntity  :> TableEntity, "Event" )
-                               ] |> Async.Parallel
-
-                    return
-                        ops |> Array.exists isError
-                            |> function
-                               | true  -> Error <| sprintf "Failed to append event to stream: %s %s" event.Id stream
-                               | false -> Ok ()
+                    return! connection |> appendTo stream eventEntity
 
                 with ex -> return Error <| ex.GetBaseException().Message
             }
@@ -87,8 +74,8 @@ module EventStore =
 
                     else 
                         let result : Connection = { 
-                            Context                  = cloudTableClient
-                            ConnectionString         = request.ConnectionString
+                            Context          = cloudTableClient
+                            ConnectionString = request.ConnectionString
                         }
 
                         return Ok result
@@ -101,7 +88,8 @@ module EventStore =
         fun (Stream stream) startIndex count connectionString -> 
 
             let toEvent (v:EventEntity) = { 
-                Event.Id  = v.RowKey; 
+                Event.Id  = v.RowKey;
+                EventType = EventType  v.EventType
                 Data      = Data (JSON v.Data); 
                 Timestamp = v.Timestamp.DateTime
             }
@@ -119,13 +107,12 @@ module EventStore =
                      
                             async {
                             
-                                match! cloudTable |> getEntitiesAsync |> Async.AwaitTask with
+                                match! cloudTable |> getEntities<EventEntity> |> Async.AwaitTask with
                                 | Error msg'  -> return Error msg'
                                 | Ok entities ->
 
                                    let events = 
-                                       entities |> Seq.cast<EventEntity>
-                                                |> Seq.map toEvent
+                                       entities |> Seq.map toEvent
                                                 |> Seq.sortByDescending(fun v -> v.Timestamp)
                                                 |> Seq.skip startIndex
                                                 |> Seq.take count

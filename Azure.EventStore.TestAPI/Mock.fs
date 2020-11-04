@@ -14,10 +14,11 @@ module Mock =
         Credential         = someCrecdential
     }
 
-    let someStream = EventStore.Core.Language.Stream "some_stream"
+    let someStream = EventStore.Core.Language.Stream "someStream"
 
     let someEvent  : EventStore.Core.Language.Event = {
         Id        = "some_event_id"
-        Data      = Data <| JSON "some json"
+        EventType = "some_eventType" |> EventType
+        Data      = "some json"      |> JSON |> Data
         Timestamp = DateTime.Now
     }
