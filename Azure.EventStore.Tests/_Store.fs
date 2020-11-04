@@ -55,9 +55,9 @@ let ``Read last 2 events from EventStore (descending)`` () =
         // Setup
         let startIndex, count = 0 , 2
 
-        let! _ = someConnectionString |> EventStore.tryAppend someStream someEvent 
-        let! _ = someConnectionString |> EventStore.tryAppend someStream someEvent2
-        let! _ = someConnectionString |> EventStore.tryAppend someStream someEvent3
+        do! someConnectionString |> EventStore.tryAppend someStream someEvent  |> Async.Ignore
+        do! someConnectionString |> EventStore.tryAppend someStream someEvent2 |> Async.Ignore
+        do! someConnectionString |> EventStore.tryAppend someStream someEvent3 |> Async.Ignore
 
         // Test
         match! someConnectionString |> EventStore.tryReadBackwards someStream startIndex count with
