@@ -62,10 +62,7 @@ let ``Read last 2 events from EventStore (descending)`` () =
         // Test
         match! someConnectionString |> EventStore.tryReadBackwards someStream startIndex count with
         | Error msg -> failwith msg
-        | Ok events -> 
-        
-            let expected = events |> Seq.map(fun v -> v.Data) 
-
-            expected |> should equal <| seq [someEvent3.Data; someEvent2.Data]
+        | Ok events ->
+             events |> Seq.map(fun v -> v.Data) |> should equal <| seq [someEvent3.Data; someEvent2.Data]
 
     } |> Async.RunSynchronously
