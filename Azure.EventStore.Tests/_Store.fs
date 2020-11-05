@@ -13,7 +13,7 @@ let teardown() =
 
         let (Stream stream) = someStream
 
-        seq [Table stream, PartitionKey "Stream"
+        seq [Table stream, PartitionKey "Event"
             ] |> Seq.iter (fun v -> async { do! Teardown.execute v } |> Async.RunSynchronously)
     
 [<Test>]
