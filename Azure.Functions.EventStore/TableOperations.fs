@@ -55,12 +55,15 @@ module TableOperations =
 
         async {
             
-            let  operation      = TableOperation.Retrieve<'T>(partitionKey, rowKey)
-            let! retrieveResult = storageTable.ExecuteAsync(operation) |> Async.AwaitTask
+            try
+                let  operation      = TableOperation.Retrieve<'T>(partitionKey, rowKey)
+                let! retrieveResult = storageTable.ExecuteAsync(operation) |> Async.AwaitTask
 
-            if retrieveResult.Result <> null then
-                 return Some (retrieveResult.Result :?> 'T)
-            else return None
+                if retrieveResult.Result <> null then
+                     return Ok <| Some (retrieveResult.Result :?> 'T)
+                else return Ok <| None
+
+            with ex -> return Error <| ex.GetBaseException().Message
 
         } |> Async.StartAsTask
 
@@ -150,42 +153,52 @@ module TableOperations =
 
         async {
 
-            let  pKey,rKey = PartitionKey entity.PartitionKey, RowKey entity.RowKey
-            let! result    = cloudTable |> tryFind pKey rKey |> Async.AwaitTask
+            try
+                let  pKey,rKey = PartitionKey entity.PartitionKey, RowKey entity.RowKey
+                let! result    = cloudTable |> tryFind pKey rKey |> Async.AwaitTask
 
-            match result with
-            | None -> return Error <| sprintf "Entity not found: %A" entity
-            | Some _ ->
+                return
+                    match result with
+                    | Error msg -> Error msg
+                    | Ok v      ->
+                         v |> function
+                              | None -> Error <| sprintf "Entity not found: %A" entity
+                              | Some _ ->
+                              
+                                async {
+                                
+                                    let  operation = TableOperation.Replace(entity)
+                                    let! result    = cloudTable.ExecuteAsync(operation) |> Async.AwaitTask
+          
+                                    if result.HttpStatusCode = (int)HttpStatusCode.NoContent
+                                    then return Ok    <| (result.Result :?> TableEntity)
+                                    else return Error <| sprintf "%i: Failed to update entity" result.HttpStatusCode
 
-                let  operation = TableOperation.Replace(entity)
-                let! result    = cloudTable.ExecuteAsync(operation) |> Async.AwaitTask
+                                } |> Async.RunSynchronously
 
-                if result.HttpStatusCode = (int)HttpStatusCode.NoContent
-                then return Ok    <| (result.Result :?> TableEntity)
-                else return Error <| sprintf "%i: Failed to update entity" result.HttpStatusCode
+            with ex -> return Error <| ex.GetBaseException().Message
         }
 
     let tryCreate (entity:TableEntity) (connectionString:string) (tableName:string) =
 
         async {
         
-            let table = Table tableName
+            try
+                let table = Table tableName
 
-            match! table |> tryEnsureExists connectionString |> Async.AwaitTask with
-            | Error msg     -> return Error msg
-            | Ok cloudTable ->
+                match! table |> tryEnsureExists connectionString |> Async.AwaitTask with
+                | Error msg     -> return Error msg
+                | Ok cloudTable ->
 
-                let  operation = TableOperation.Insert(entity)
-                let! result    = cloudTable.ExecuteAsync(operation) |> Async.AwaitTask
+                    let  operation = TableOperation.Insert(entity)
+                    let! result    = cloudTable.ExecuteAsync(operation) |> Async.AwaitTask
     
-                if result.HttpStatusCode = (int)HttpStatusCode.NoContent
-                then return Ok ()
-                else return Error <| result.HttpStatusCode.ToString()
+                    if result.HttpStatusCode = (int)HttpStatusCode.NoContent
+                    then return Ok ()
+                    else return Error <| result.HttpStatusCode.ToString()
+
+            with ex -> return Error <| ex.GetBaseException().Message
         }
-
-
-
-
 
     let tryGetCloudTable (tableName:string) (connectionString:string) =
 
@@ -201,20 +214,23 @@ module TableOperations =
 
         async {
 
-            let! result = tryEnsureExists connectionstring table |> Async.AwaitTask
+            try
+                let! result = tryEnsureExists connectionstring table |> Async.AwaitTask
 
-            return
-                result |> function
-                | Error msg     -> Result.Error msg
-                | Ok cloudTable ->
+                return
+                    result |> function
+                    | Error msg     -> Result.Error msg
+                    | Ok cloudTable ->
 
-                    async {
+                        async {
 
-                        let! entities = cloudTable |> tryReadForward'<'T> partitionKey |> Async.AwaitTask
+                            let! entities = cloudTable |> tryReadForward'<'T> partitionKey |> Async.AwaitTask
 
-                        return Result.Ok <| entities.Results.OrderBy(fun e -> e.Timestamp)
+                            return Result.Ok <| entities.Results.OrderBy(fun e -> e.Timestamp)
 
-                    } |> Async.RunSynchronously
+                        } |> Async.RunSynchronously
+
+            with ex -> return Error <| ex.GetBaseException().Message
         }
 
     let tryReadForwardCount<'T when 'T : (new : unit -> 'T :> TableEntity)> (table:Table) (connectionstring:ConnectionString) (PartitionKey partitionKey) (count:int) =
