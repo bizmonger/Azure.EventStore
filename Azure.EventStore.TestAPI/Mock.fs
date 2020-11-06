@@ -20,7 +20,7 @@ module Mock =
         Id        = "some_event_id"
         Stream    = "some_stream"    |> Stream
         EventType = "some_eventType" |> EventType
-        MetaData  = "some_meta_data"  |> MetaData
+        MetaData  = "some_meta_data" |> MetaData
         Data      = "some json"      |> JSON |> Data
         Timestamp = DateTime.Now
     }

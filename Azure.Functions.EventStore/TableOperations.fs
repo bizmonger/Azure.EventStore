@@ -1,9 +1,11 @@
 ﻿namespace Azure
 
 open System
+open System.Linq
 open System.Net
 open Microsoft.WindowsAzure.Storage
 open Microsoft.WindowsAzure.Storage.Table
+open EventStore.Language
 
 module Entities =
 
@@ -107,7 +109,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-    let tryRead<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
+    let tryReadForward'<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
 
         async {
         
@@ -118,7 +120,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-    let tryReadCount<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (count:int) (cloudTable:CloudTable) =
+    let tryReadForwardCount'<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (count:int) (cloudTable:CloudTable) =
 
         async {
         
@@ -133,7 +135,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-    let tryReadBackwards<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
+    let tryReadBackwards'<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
 
         async {
     
@@ -179,4 +181,109 @@ module TableOperations =
                 if result.HttpStatusCode = (int)HttpStatusCode.NoContent
                 then return Ok ()
                 else return Error <| result.HttpStatusCode.ToString()
+        }
+
+
+
+
+
+    let tryGetCloudTable (tableName:string) (connectionString:string) =
+
+        try
+            let storageAccount   = CloudStorageAccount.Parse connectionString
+            let cloudTableClient = storageAccount.CreateCloudTableClient()
+            let cloudTable       = cloudTableClient.GetTableReference(tableName)
+            Ok  cloudTable
+
+        with ex -> Result.Error <| ex.GetBaseException().Message
+
+    let tryReadForward<'T when 'T : (new : unit -> 'T :> TableEntity)> (PartitionKey partitionKey) (table:Table) (connectionstring:ConnectionString) =
+
+        async {
+
+            let! result = tryEnsureExists connectionstring table |> Async.AwaitTask
+
+            return
+                result |> function
+                | Error msg     -> Result.Error msg
+                | Ok cloudTable ->
+
+                    async {
+
+                        let! entities = cloudTable |> tryReadForward'<'T> partitionKey |> Async.AwaitTask
+
+                        return Result.Ok <| entities.Results.OrderBy(fun e -> e.Timestamp)
+
+                    } |> Async.RunSynchronously
+        }
+
+    let tryReadForwardCount<'T when 'T : (new : unit -> 'T :> TableEntity)> (table:Table) (connectionstring:ConnectionString) (PartitionKey partitionKey) (count:int) =
+
+        async {
+
+            try
+                let! result = tryEnsureExists connectionstring table |> Async.AwaitTask
+
+                return
+                    result |> function
+                    | Error msg     -> Result.Error msg
+                    | Ok cloudTable ->
+
+                        async {
+
+                            match! cloudTable |> tryReadForwardCount'<'T> partitionKey count |> Async.AwaitTask with
+                            | Error msg   -> return Error msg
+                            | Ok entities -> return Ok <| entities.Results.OrderBy(fun e -> e.Timestamp)
+
+                        } |> Async.RunSynchronously
+
+            with ex -> return Error <| ex.GetBaseException().Message
+        }
+
+    let tryReadBackwards<'T when 'T : (new : unit -> 'T :> TableEntity)> (PartitionKey partitionKey) (table:Table) (connectionstring:ConnectionString) =
+
+        async {
+
+            try
+                let! result = tryEnsureExists connectionstring table |> Async.AwaitTask
+
+                return
+                    result |> function
+                    | Error msg     -> Result.Error msg
+                    | Ok cloudTable ->
+
+                        async {
+
+                            let! entities = cloudTable |> tryReadForward'<'T> partitionKey |> Async.AwaitTask
+                            let  result   = entities.Results.OrderByDescending(fun e -> e.Timestamp)
+
+                            return Result.Ok result
+
+                        } |> Async.RunSynchronously
+
+            with ex -> return Error <| ex.GetBaseException().Message
+        }
+
+    let tryReadBackwardsCount<'T when 'T : (new : unit -> 'T :> TableEntity)> (table:Table) (connectionstring:ConnectionString) (PartitionKey partionKey) (count:int) =
+
+        async {
+
+            try
+                let! result = tryEnsureExists connectionstring table |> Async.AwaitTask
+
+                return
+                    result |> function
+                    | Error msg     -> Result.Error msg
+                    | Ok cloudTable ->
+
+                        async {
+
+                            let! entities = cloudTable |> tryReadBackwards'<'T> partionKey |> Async.AwaitTask
+
+                            return Result.Ok <| entities.Results.OrderByDescending(fun e -> e.Timestamp)
+                                                                .Take count
+
+                        } |> Async.RunSynchronously
+
+            with ex -> return Error <| ex.GetBaseException().Message
         }
