@@ -1,7 +1,6 @@
 ﻿namespace Azure
 
 open System
-open System.Linq
 open System.Net
 open Microsoft.WindowsAzure.Storage
 open Microsoft.WindowsAzure.Storage.Table
@@ -16,6 +15,8 @@ module Entities =
         member val EventType = "" with get,set
         member val MetaData  = "" with get,set
         member val Data      = "" with get,set
+
+module TableOperations =
 
     type Table            = Table            of string
     type PartitionKey     = PartitionKey     of string
@@ -110,8 +111,8 @@ module Entities =
 
         async {
         
-            let streamIdFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey)
-            let query          = TableQuery<'T>().Where(streamIdFilter)
+            let filter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey)
+            let query  = TableQuery<'T>().Where(filter)
 
             return! cloudTable.ExecuteQuerySegmentedAsync(query,null) |> Async.AwaitTask
 
@@ -121,8 +122,8 @@ module Entities =
 
         async {
         
-            let streamIdFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey)
-            let query          = TableQuery<'T>().Where(streamIdFilter).Take((Nullable<int>)count)
+            let filter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey)
+            let query  = TableQuery<'T>().Where(filter).Take((Nullable<int>)count)
 
             return! cloudTable.ExecuteQuerySegmentedAsync(query,null) |> Async.AwaitTask
 
@@ -130,13 +131,12 @@ module Entities =
 
 
 
-    let getEntitiesBackwardssOnCountAsync<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
+    let getEntitiesBackwardsAsync<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
 
         async {
     
-            let streamIdFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey)
-            let query          = TableQuery<'T>().Where(streamIdFilter)
-                                                 //.Take((Nullable<int>)count)
+            let filter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey)
+            let query  = TableQuery<'T>().Where(filter)
 
             return! cloudTable.ExecuteQuerySegmentedAsync(query,null) |> Async.AwaitTask
 

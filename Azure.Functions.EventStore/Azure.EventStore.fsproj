@@ -7,7 +7,6 @@
   <ItemGroup>
     <Compile Include="Connection.fs" />
     <Compile Include="TableOperations.fs" />
-    <Compile Include="AzureEntities.fs" />
     <Compile Include="AzureEventStore.fs" />
     <Compile Include="EventStore.fs" />
   </ItemGroup>

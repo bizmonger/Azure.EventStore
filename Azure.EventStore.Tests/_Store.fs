@@ -5,8 +5,9 @@ open FsUnit
 open Azure
 open Azure.EventStore.TestAPI
 open Azure.EventStore.TestAPI.Mock
-open EventStore.Core.Language
 open Azure.Entities
+open Azure.TableOperations
+open EventStore.Core.Language
 
 [<TearDown>]
 let teardown() = 

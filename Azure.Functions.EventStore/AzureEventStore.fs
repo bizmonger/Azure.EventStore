@@ -5,6 +5,7 @@ open System.Linq
 open Microsoft.WindowsAzure.Storage
 open Microsoft.WindowsAzure.Storage.Table
 open Azure.Entities
+open Azure.TableOperations
 open EventStore.Core.Language
 open EventStore.Operations
 open EventStore.Language
@@ -210,7 +211,7 @@ module EventStore =
                     async {
 
                         let  streamId' = valueFromStreamId stream
-                        let! entities  = cloudTable |> getEntitiesBackwardssOnCountAsync<'T> streamId' |> Async.AwaitTask
+                        let! entities  = cloudTable |> getEntitiesBackwardsAsync<'T> streamId' |> Async.AwaitTask
 
                         return Result.Ok <| entities.Results.OrderByDescending(fun e -> e.Timestamp)
                                                             .Take count

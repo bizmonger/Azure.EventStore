@@ -1,7 +1,7 @@
 ﻿namespace Azure.EventStore.TestAPI
 
 open Mock
-open Azure.Entities
+open Azure.TableOperations
 
 module Teardown =
 

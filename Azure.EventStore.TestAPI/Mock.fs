@@ -3,7 +3,7 @@
 open System
 open EventStore.Core.Language
 open EventStore.Language
-open Azure.Entities
+open Azure.TableOperations
 
 module Mock =
 
