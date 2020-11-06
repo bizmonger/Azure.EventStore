@@ -107,7 +107,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-    let getEntitiesAsync<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
+    let tryGetEntities<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
 
         async {
         
@@ -122,10 +122,14 @@ module TableOperations =
 
         async {
         
-            let filter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey)
-            let query  = TableQuery<'T>().Where(filter).Take((Nullable<int>)count)
+            try
+                let filter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey)
+                let query  = TableQuery<'T>().Where(filter).Take((Nullable<int>)count)
 
-            return! cloudTable.ExecuteQuerySegmentedAsync(query,null) |> Async.AwaitTask
+                let! result = cloudTable.ExecuteQuerySegmentedAsync(query,null) |> Async.AwaitTask
+                return Ok result
+
+            with ex -> return Error <| ex.GetBaseException().Message
 
         } |> Async.StartAsTask
 

@@ -61,7 +61,7 @@ module EventStore =
                 
             }
 
-    let getCloudTable (tableName:string) (connectionString:string) =
+    let tryGetCloudTable (tableName:string) (connectionString:string) =
 
         try
             let storageAccount   = CloudStorageAccount.Parse connectionString
@@ -94,24 +94,27 @@ module EventStore =
             with ex -> return Error <| ex.GetBaseException().Message
         }
 
-    let appendSequenceAsync (events:Event seq) (connectionstring:ConnectionString) (tableName:string) =
+    let tryAppendSequence (events:Event seq) (connectionstring:ConnectionString) (tableName:string) =
 
         async {
 
-            let isSuccessful =  function
-                | Error _ -> false
-                | Ok    _ -> true
+            try
+                let isSuccessful =  function
+                    | Error _ -> false
+                    | Ok    _ -> true
     
-            return
-                events 
-                |> Seq.map (fun event -> async { return! tryAppend event connectionstring } |> Async.RunSynchronously)
-                |> Seq.forall isSuccessful
-                |> function
-                    | false -> Result.Error "Failed to create an event"
-                    | true  -> Result.Ok ()
+                return
+                    events 
+                    |> Seq.map (fun event -> async { return! tryAppend event connectionstring } |> Async.RunSynchronously)
+                    |> Seq.forall isSuccessful
+                    |> function
+                        | false -> Result.Error "Failed to create an event"
+                        | true  -> Result.Ok ()
+
+            with ex -> return Error <| ex.GetBaseException().Message
         }
 
-    let readEventsAscendingAsync (stream:Stream) (table:Table) (connectionstring:ConnectionString) =
+    let tryGetEventsAscending (stream:Stream) (table:Table) (connectionstring:ConnectionString) =
 
         async {
     
@@ -125,7 +128,7 @@ module EventStore =
                     async {
 
                         let  streamId' = valueFromStreamId stream
-                        let! entities  = cloudTable |> getEntitiesAsync streamId' |> Async.AwaitTask
+                        let! entities  = cloudTable |> tryGetEntities streamId' |> Async.AwaitTask
 
                         return Result.Ok <| entities.Results.OrderBy(fun e -> e.Timestamp)
 
@@ -146,77 +149,87 @@ module EventStore =
                     async {
 
                         let  streamId'= valueFromStreamId streamId
-                        let! entities = cloudTable |> getEntitiesAsync streamId' |> Async.AwaitTask
+                        let! entities = cloudTable |> tryGetEntities streamId' |> Async.AwaitTask
 
                         return Result.Ok <| entities.Results.OrderBy(fun e -> e.Timestamp)
 
                     } |> Async.RunSynchronously
         }
 
-    let readEventsForwardOnCountAsync<'T when 'T : (new : unit -> 'T :> TableEntity)> (table:Table) (connectionstring:ConnectionString) (stream:Stream) (count:int) =
+    let tryreadEventsForwardOnCount<'T when 'T : (new : unit -> 'T :> TableEntity)> (table:Table) (connectionstring:ConnectionString) (stream:Stream) (count:int) =
 
         async {
 
-            let! result = ensureExistsAsync connectionstring table |> Async.AwaitTask
+            try
+                let! result = ensureExistsAsync connectionstring table |> Async.AwaitTask
 
-            return
-                result |> function
-                | Error msg     -> Result.Error msg
-                | Ok cloudTable ->
+                return
+                    result |> function
+                    | Error msg     -> Result.Error msg
+                    | Ok cloudTable ->
 
-                    async {
+                        async {
 
-                        let  streamId' = valueFromStreamId stream
-                        let! entities  = cloudTable |> getEntitiessOnCountAsync streamId' count |> Async.AwaitTask
+                            let streamId = valueFromStreamId stream
 
-                        return Result.Ok <| entities.Results.OrderBy(fun e -> e.Timestamp)
+                            match! cloudTable |> getEntitiessOnCountAsync streamId count |> Async.AwaitTask with
+                            | Error msg   -> return Error msg
+                            | Ok entities -> return Ok <| entities.Results.OrderBy(fun e -> e.Timestamp)
 
-                    } |> Async.RunSynchronously
+                        } |> Async.RunSynchronously
+
+            with ex -> return Error <| ex.GetBaseException().Message
         }
 
-    let readEventsBackwardsAsync<'T when 'T : (new : unit -> 'T :> TableEntity)> (stream:Stream) (table:Table) (connectionstring:ConnectionString) =
+    let tryReadEventsBackwards<'T when 'T : (new : unit -> 'T :> TableEntity)> (stream:Stream) (table:Table) (connectionstring:ConnectionString) =
 
         async {
     
-            let! result = ensureExistsAsync connectionstring table |> Async.AwaitTask
+            try
+                let! result = ensureExistsAsync connectionstring table |> Async.AwaitTask
 
-            return
-                result |> function
-                | Error msg     -> Result.Error msg
-                | Ok cloudTable ->
+                return
+                    result |> function
+                    | Error msg     -> Result.Error msg
+                    | Ok cloudTable ->
 
-                    async {
+                        async {
 
-                        let  streamId' = valueFromStreamId stream
-                        let! entities  = cloudTable |> getEntitiesAsync<'T> streamId' |> Async.AwaitTask
+                            let  streamId' = valueFromStreamId stream
+                            let! entities  = cloudTable |> tryGetEntities<'T> streamId' |> Async.AwaitTask
 
-                        let result = entities.Results.OrderByDescending(fun e -> e.Timestamp)
+                            let result = entities.Results.OrderByDescending(fun e -> e.Timestamp)
 
-                        return Result.Ok result
+                            return Result.Ok result
 
-                    } |> Async.RunSynchronously
+                        } |> Async.RunSynchronously
+
+            with ex -> return Error <| ex.GetBaseException().Message
         }
 
-    let readEventsBackwardsOnCountAsync<'T when 'T : (new : unit -> 'T :> TableEntity)> (table:Table) (connectionstring:ConnectionString) (stream:Stream) (count:int) =
+    let tryReadEventsBackwardsOnCount<'T when 'T : (new : unit -> 'T :> TableEntity)> (table:Table) (connectionstring:ConnectionString) (stream:Stream) (count:int) =
 
         async {
     
-            let! result = ensureExistsAsync connectionstring table |> Async.AwaitTask
+            try
+                let! result = ensureExistsAsync connectionstring table |> Async.AwaitTask
 
-            return
-                result |> function
-                | Error msg     -> Result.Error msg
-                | Ok cloudTable ->
+                return
+                    result |> function
+                    | Error msg     -> Result.Error msg
+                    | Ok cloudTable ->
 
-                    async {
+                        async {
 
-                        let  streamId' = valueFromStreamId stream
-                        let! entities  = cloudTable |> getEntitiesBackwardsAsync<'T> streamId' |> Async.AwaitTask
+                            let  streamId = valueFromStreamId stream
+                            let! entities = cloudTable |> getEntitiesBackwardsAsync<'T> streamId |> Async.AwaitTask
 
-                        return Result.Ok <| entities.Results.OrderByDescending(fun e -> e.Timestamp)
-                                                            .Take count
+                            return Result.Ok <| entities.Results.OrderByDescending(fun e -> e.Timestamp)
+                                                                .Take count
 
-                    } |> Async.RunSynchronously
+                        } |> Async.RunSynchronously
+
+            with ex -> return Error <| ex.GetBaseException().Message
         }
 
     //type ConnectionString = ConnectionString of string
