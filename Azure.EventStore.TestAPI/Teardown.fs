@@ -1,7 +1,7 @@
 ﻿namespace Azure.EventStore.TestAPI
 
-open Azure.Storage
 open Mock
+open Azure.Entities
 
 module Teardown =
 
@@ -9,13 +9,11 @@ module Teardown =
 
         async {
     
-            let connection = ConnectionString someConnectionString
-
-            match! table |> ensureExists connection |> Async.AwaitTask with
+            match! table |> ensureExistsAsync someConnectionString |> Async.AwaitTask with
             | Error msg     -> failwith msg
             | Ok cloudTable -> 
         
-                match! cloudTable |> deleteEntities partitionKey |> Async.AwaitTask with
+                match! cloudTable |> deleteEntitiesAsync partitionKey |> Async.AwaitTask with
                 | Error msg' -> failwith msg'
                 | Ok _       -> ()
         }

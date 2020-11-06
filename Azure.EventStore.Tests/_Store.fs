@@ -5,15 +5,15 @@ open FsUnit
 open Azure
 open Azure.EventStore.TestAPI
 open Azure.EventStore.TestAPI.Mock
-open Azure.Storage
 open EventStore.Core.Language
+open Azure.Entities
 
 [<TearDown>]
 let teardown() = 
 
         let (Stream stream) = someStream
 
-        seq [Table stream, PartitionKey "Event"
+        seq [SomeStreamTable, PartitionKey stream
             ] |> Seq.iter (fun v -> async { do! Teardown.execute v } |> Async.RunSynchronously)
     
 [<Test>]
@@ -22,7 +22,7 @@ let ``Add event to EventStore`` () =
     async {
 
         // Test
-        match! someConnectionString |> EventStore.tryAppend someStream someEvent with
+        match! someConnectionString |> EventStore.tryAppend someEvent with
         | Error msg -> failwith msg
         | Ok _      -> ()
     
@@ -34,14 +34,14 @@ let ``Read event from EventStore`` () =
     async {
 
         // Setup
-        let startIndex, count = 0 , 1
+        let count = 1
 
-        match! someConnectionString |> EventStore.tryAppend someStream someEvent with
+        match! someConnectionString |> EventStore.tryAppend someEvent with
         | Error msg -> failwith msg
         | Ok _      ->
 
             // Test
-            match! someConnectionString |> EventStore.tryReadBackwards someStream startIndex count with
+            match! (someEvent.Stream, count) ||> EventStore.readEventsBackwardsOnCountAsync SomeStreamTable someConnectionString with
             | Error msg -> failwith msg
             | Ok events -> events |> Seq.isEmpty |> should equal false
     
@@ -53,14 +53,14 @@ let ``Read last 2 events from EventStore (descending)`` () =
     async {
 
         // Setup
-        let startIndex, count = 0 , 2
+        let count = 2
 
-        do! someConnectionString |> EventStore.tryAppend someStream someEvent  |> Async.Ignore
-        do! someConnectionString |> EventStore.tryAppend someStream someEvent2 |> Async.Ignore
-        do! someConnectionString |> EventStore.tryAppend someStream someEvent3 |> Async.Ignore
+        do! someConnectionString |> EventStore.tryAppend someEvent  |> Async.Ignore
+        do! someConnectionString |> EventStore.tryAppend someEvent2 |> Async.Ignore
+        do! someConnectionString |> EventStore.tryAppend someEvent3 |> Async.Ignore
 
         // Test
-        match! someConnectionString |> EventStore.tryReadBackwards someStream startIndex count with
+        match! (someEvent.Stream, count) ||> EventStore.readEventsBackwardsOnCountAsync<EventEntity> SomeStreamTable someConnectionString with
         | Error msg -> failwith msg
         | Ok events ->
              events |> Seq.map(fun v -> v.Data) |> should equal <| seq [someEvent3.Data; someEvent2.Data]

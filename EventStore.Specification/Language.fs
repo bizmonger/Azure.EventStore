@@ -1,7 +1,5 @@
 ﻿namespace EventStore
 
-open EventStore.Core.Language
-
 module Language =
 
     type AsyncResult<'a,'e> = Async<Result<'a,'e>>
