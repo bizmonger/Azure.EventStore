@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Azure.Functions.EventStore\Azure.EventStore.fsproj" />
+    <ProjectReference Include="..\Azure.EventStore\Azure.EventStore.fsproj" />
     <ProjectReference Include="..\EventStore.Specification\01_EventStore.Specification.fsproj" />
   </ItemGroup>
 
