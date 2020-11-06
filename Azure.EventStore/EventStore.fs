@@ -11,7 +11,7 @@ open EventStore.Utilities
 
 module EventStore =
 
-    let private StreamTable = "Stream"
+    let private streamTable = "Stream"
 
     let tryConnect : Create =
     
@@ -68,7 +68,7 @@ module EventStore =
                 entity.MetaData     <- event.MetaData  |> valueFromMeta
                 entity.EventType    <- event.EventType |> valueFromEventType
 
-                match! (connectionstring, StreamTable) ||> tryCreate entity with
+                match! (connectionstring, streamTable) ||> tryCreate entity with
                 | Error msg -> return Result.Error <| msg
                 | Ok _      -> return Result.Ok    <| valueFromRowKey rowKey 
 
@@ -93,4 +93,19 @@ module EventStore =
                         | true  -> Result.Ok ()
 
             with ex -> return Error <| ex.GetBaseException().Message
+        }
+
+    let tryReadBackwards (Stream stream) (connectionstring:ConnectionString) : AsyncResult<Event seq, ErrorDescription> =
+
+        async {
+
+            let partitionKey = PartitionKey stream
+            let table = Table streamTable
+            match! tryReadBackwards partitionKey table connectionstring with
+            | Error msg -> return Error msg
+            | entities  -> 
+
+
+                return Error "not implemented"
+        
         }
