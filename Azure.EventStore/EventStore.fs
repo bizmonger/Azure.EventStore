@@ -116,3 +116,14 @@ module EventStore =
             | Error msg   -> return Error msg
             | Ok entities -> return Ok (entities |> Seq.map toEvent)
         }
+
+    let tryReadLastEvent (Stream stream) (connectionstring:ConnectionString) : AsyncResult<Event seq, ErrorDescription> =
+
+        async {
+
+            let partitionKey, table = PartitionKey stream, Table streamTable
+
+            match! connectionstring |> TableOperations.tryReadBackwardsCount<EventEntity> table partitionKey 1 with
+            | Error msg   -> return Error msg
+            | Ok entities -> return Ok (entities |> Seq.map toEvent)
+        }

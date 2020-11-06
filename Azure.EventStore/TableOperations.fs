@@ -9,7 +9,6 @@ open EventStore.Language
 open System.Runtime.CompilerServices
 
 [<assembly: InternalsVisibleTo("Azure.EventStore.TestAPI")>]
-[<assembly: InternalsVisibleTo("Azure.EventStore.Tests")>]
 
 do()
 

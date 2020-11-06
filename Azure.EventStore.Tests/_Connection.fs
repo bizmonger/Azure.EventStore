@@ -55,24 +55,3 @@ let ``Integration: Terminate connection`` () =
                 } |> Async.RunSynchronously
 
     } |> Async.RunSynchronously
-
-[<Test>]
-let ``Integration: Append event`` () =
-
-    async {
-
-        // Setup
-        match! someConnectionRequest |> EventStore.tryConnect with
-        | Error msg     -> Assert.Fail msg
-        | Ok connection -> 
-             
-            async {
-
-                // Test
-                match! EventStore.tryAppend someEvent someConnectionString with
-                | Error msg -> failwith msg
-                | Ok _      -> teardown connection
-
-            } |> Async.RunSynchronously
-
-    } |> Async.RunSynchronously

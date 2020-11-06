@@ -5,7 +5,6 @@ open FsUnit
 open Azure
 open Azure.EventStore.TestAPI
 open Azure.EventStore.TestAPI.Mock
-open Azure.Entities
 open Azure.TableOperations
 open EventStore.Utilities
 open EventStore.Core.Language
@@ -36,27 +35,23 @@ let ``Read event from EventStore`` () =
     async {
 
         // Setup
-        let partitionKey = someEvent.Stream |> valueFromStreamId |> PartitionKey
-
         match! someConnectionString |> EventStore.tryAppend someEvent with
         | Error msg -> failwith msg
         | Ok _      ->
 
             // Test
-            match! someConnectionString |> TableOperations.tryReadBackwardsCount SomeStreamTable partitionKey 1 with
+            match! someConnectionString |> EventStore.tryReadLastEvent someEvent.Stream with
             | Error msg -> failwith msg
             | Ok events -> events |> Seq.isEmpty |> should equal false
     
     } |> Async.RunSynchronously
 
 [<Test>]
-let ``Read last 2 events from EventStore (descending)`` () =
+let ``Read last 2 events from EventStore (backwards)`` () =
 
     async {
 
         // Setup
-        let partitionKey = someEvent.Stream |> valueFromStreamId |> PartitionKey
-
         do! someConnectionString |> EventStore.tryAppend someEvent  |> Async.Ignore
         do! someConnectionString |> EventStore.tryAppend someEvent2 |> Async.Ignore
         do! someConnectionString |> EventStore.tryAppend someEvent3 |> Async.Ignore
