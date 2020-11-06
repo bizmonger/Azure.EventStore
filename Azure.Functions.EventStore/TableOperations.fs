@@ -22,7 +22,7 @@ module TableOperations =
     type PartitionKey     = PartitionKey     of string
     type RowKey           = RowKey           of string
 
-    let ensureExistsAsync connectionString (Table tableName) =
+    let tryEnsureExists connectionString (Table tableName) =
 
         async {
 
@@ -49,7 +49,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
     
-    let findEntityAsync<'T when 'T :> TableEntity> (PartitionKey partitionKey) (RowKey rowKey) (storageTable:CloudTable) =
+    let tryFind<'T when 'T :> TableEntity> (PartitionKey partitionKey) (RowKey rowKey) (storageTable:CloudTable) =
 
         async {
             
@@ -62,7 +62,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-    let deleteEntityAsync<'T when 'T :> TableEntity> (PartitionKey partitionKey) (RowKey rowKey) (cloudTable:CloudTable) =
+    let tryDelete<'T when 'T :> TableEntity> (PartitionKey partitionKey) (RowKey rowKey) (cloudTable:CloudTable) =
 
         async {
             
@@ -84,7 +84,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-    let deleteEntitiesAsync<'T when 'T :> TableEntity> (PartitionKey partitionKey) (cloudTable:CloudTable) =
+    let tryDeleteAll<'T when 'T :> TableEntity> (PartitionKey partitionKey) (cloudTable:CloudTable) =
 
         async {
             
@@ -107,7 +107,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-    let tryGetEntities<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
+    let tryRead<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
 
         async {
         
@@ -118,7 +118,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-    let getEntitiessOnCountAsync<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (count:int) (cloudTable:CloudTable) =
+    let tryReadCount<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (count:int) (cloudTable:CloudTable) =
 
         async {
         
@@ -133,9 +133,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-
-
-    let getEntitiesBackwardsAsync<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
+    let tryReadBackwards<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
 
         async {
     
@@ -146,14 +144,12 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-
-
-    let updateEntityAsync (cloudTable:CloudTable) (entity:TableEntity) = 
+    let tryUpdate (cloudTable:CloudTable) (entity:TableEntity) = 
 
         async {
 
             let  pKey,rKey = PartitionKey entity.PartitionKey, RowKey entity.RowKey
-            let! result    = cloudTable |> findEntityAsync pKey rKey |> Async.AwaitTask
+            let! result    = cloudTable |> tryFind pKey rKey |> Async.AwaitTask
 
             match result with
             | None -> return Error <| sprintf "Entity not found: %A" entity
@@ -167,19 +163,19 @@ module TableOperations =
                 else return Error <| sprintf "%i: Failed to update entity" result.HttpStatusCode
         }
 
-    let createAsync (entity:TableEntity) (connectionString:string) (tableName:string) =
+    let tryCreate (entity:TableEntity) (connectionString:string) (tableName:string) =
 
         async {
         
             let table = Table tableName
 
-            match! table |> ensureExistsAsync connectionString |> Async.AwaitTask with
+            match! table |> tryEnsureExists connectionString |> Async.AwaitTask with
             | Error msg     -> return Error msg
             | Ok cloudTable ->
 
                 let  operation = TableOperation.Insert(entity)
                 let! result    = cloudTable.ExecuteAsync(operation) |> Async.AwaitTask
-                
+    
                 if result.HttpStatusCode = (int)HttpStatusCode.NoContent
                 then return Ok ()
                 else return Error <| result.HttpStatusCode.ToString()

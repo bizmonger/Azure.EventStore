@@ -9,11 +9,11 @@ module Teardown =
 
         async {
     
-            match! table |> ensureExistsAsync someConnectionString |> Async.AwaitTask with
+            match! table |> tryEnsureExists someConnectionString |> Async.AwaitTask with
             | Error msg     -> failwith msg
             | Ok cloudTable -> 
         
-                match! cloudTable |> deleteEntitiesAsync partitionKey |> Async.AwaitTask with
+                match! cloudTable |> tryDeleteAll partitionKey |> Async.AwaitTask with
                 | Error msg' -> failwith msg'
                 | Ok _       -> ()
         }

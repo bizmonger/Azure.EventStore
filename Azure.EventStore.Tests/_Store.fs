@@ -42,7 +42,7 @@ let ``Read event from EventStore`` () =
         | Ok _      ->
 
             // Test
-            match! (someEvent.Stream, count) ||> EventStore.tryReadEventsBackwardsOnCount SomeStreamTable someConnectionString with
+            match! (someEvent.Stream, count) ||> EventStore.tryReadBackwardsCount SomeStreamTable someConnectionString with
             | Error msg -> failwith msg
             | Ok events -> events |> Seq.isEmpty |> should equal false
     
@@ -61,7 +61,7 @@ let ``Read last 2 events from EventStore (descending)`` () =
         do! someConnectionString |> EventStore.tryAppend someEvent3 |> Async.Ignore
 
         // Test
-        match! (someEvent.Stream, count) ||> EventStore.tryReadEventsBackwardsOnCount<EventEntity> SomeStreamTable someConnectionString with
+        match! (someEvent.Stream, count) ||> EventStore.tryReadBackwardsCount<EventEntity> SomeStreamTable someConnectionString with
         | Error msg -> failwith msg
         | Ok events ->
              events |> Seq.map(fun v -> v.Data) |> should equal <| seq [someEvent3.Data; someEvent2.Data]
