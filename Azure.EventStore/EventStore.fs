@@ -11,7 +11,7 @@ open EventStore.Utilities
 
 module EventStore =
 
-    let StreamTable = "Stream"
+    let private StreamTable = "Stream"
 
     let tryConnect : Create =
     

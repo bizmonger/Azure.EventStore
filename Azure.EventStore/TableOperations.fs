@@ -6,6 +6,12 @@ open System.Net
 open Microsoft.WindowsAzure.Storage
 open Microsoft.WindowsAzure.Storage.Table
 open EventStore.Language
+open System.Runtime.CompilerServices
+
+[<assembly: InternalsVisibleTo("Azure.EventStore.TestAPI")>]
+[<assembly: InternalsVisibleTo("Azure.EventStore.Tests")>]
+
+do()
 
 module Entities =
 
@@ -51,7 +57,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
     
-    let tryFind<'T when 'T :> TableEntity> (PartitionKey partitionKey) (RowKey rowKey) (storageTable:CloudTable) =
+    let private tryFind<'T when 'T :> TableEntity> (PartitionKey partitionKey) (RowKey rowKey) (storageTable:CloudTable) =
 
         async {
             
@@ -67,7 +73,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-    let tryDelete<'T when 'T :> TableEntity> (PartitionKey partitionKey) (RowKey rowKey) (cloudTable:CloudTable) =
+    let private tryDelete<'T when 'T :> TableEntity> (PartitionKey partitionKey) (RowKey rowKey) (cloudTable:CloudTable) =
 
         async {
             
@@ -89,7 +95,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-    let tryDeleteAll<'T when 'T :> TableEntity> (PartitionKey partitionKey) (cloudTable:CloudTable) =
+    let internal tryDeleteAll<'T when 'T :> TableEntity> (PartitionKey partitionKey) (cloudTable:CloudTable) =
 
         async {
             
@@ -112,7 +118,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-    let tryReadForward'<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
+    let private tryReadForward'<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
 
         async {
         
@@ -123,7 +129,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-    let tryReadForwardCount'<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (count:int) (cloudTable:CloudTable) =
+    let private tryReadForwardCount'<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (count:int) (cloudTable:CloudTable) =
 
         async {
         
@@ -138,7 +144,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-    let tryReadBackwards'<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
+    let private tryReadBackwards'<'T when 'T : (new : unit -> 'T :> TableEntity)> (partitionKey:string) (cloudTable:CloudTable) =
 
         async {
     
@@ -149,7 +155,7 @@ module TableOperations =
 
         } |> Async.StartAsTask
 
-    let tryUpdate (cloudTable:CloudTable) (entity:TableEntity) = 
+    let private tryUpdate (cloudTable:CloudTable) (entity:TableEntity) = 
 
         async {
 
@@ -179,7 +185,7 @@ module TableOperations =
             with ex -> return Error <| ex.GetBaseException().Message
         }
 
-    let tryCreate (entity:TableEntity) (connectionString:string) (tableName:string) =
+    let internal tryCreate (entity:TableEntity) (connectionString:string) (tableName:string) =
 
         async {
         
@@ -200,7 +206,7 @@ module TableOperations =
             with ex -> return Error <| ex.GetBaseException().Message
         }
 
-    let tryGetCloudTable (tableName:string) (connectionString:string) =
+    let private tryGetCloudTable (tableName:string) (connectionString:string) =
 
         try
             let storageAccount   = CloudStorageAccount.Parse connectionString
@@ -210,7 +216,7 @@ module TableOperations =
 
         with ex -> Result.Error <| ex.GetBaseException().Message
 
-    let tryReadForward<'T when 'T : (new : unit -> 'T :> TableEntity)> (PartitionKey partitionKey) (table:Table) (connectionstring:ConnectionString) =
+    let internal tryReadForward<'T when 'T : (new : unit -> 'T :> TableEntity)> (PartitionKey partitionKey) (table:Table) (connectionstring:ConnectionString) =
 
         async {
 
@@ -233,7 +239,7 @@ module TableOperations =
             with ex -> return Error <| ex.GetBaseException().Message
         }
 
-    let tryReadForwardCount<'T when 'T : (new : unit -> 'T :> TableEntity)> (table:Table) (connectionstring:ConnectionString) (PartitionKey partitionKey) (count:int) =
+    let internal tryReadForwardCount<'T when 'T : (new : unit -> 'T :> TableEntity)> (table:Table) (connectionstring:ConnectionString) (PartitionKey partitionKey) (count:int) =
 
         async {
 
@@ -256,7 +262,7 @@ module TableOperations =
             with ex -> return Error <| ex.GetBaseException().Message
         }
 
-    let tryReadBackwards<'T when 'T : (new : unit -> 'T :> TableEntity)> (PartitionKey partitionKey) (table:Table) (connectionstring:ConnectionString) =
+    let internal tryReadBackwards<'T when 'T : (new : unit -> 'T :> TableEntity)> (PartitionKey partitionKey) (table:Table) (connectionstring:ConnectionString) =
 
         async {
 
@@ -280,7 +286,7 @@ module TableOperations =
             with ex -> return Error <| ex.GetBaseException().Message
         }
 
-    let tryReadBackwardsCount<'T when 'T : (new : unit -> 'T :> TableEntity)> (table:Table) (connectionstring:ConnectionString) (PartitionKey partionKey) (count:int) =
+    let internal tryReadBackwardsCount<'T when 'T : (new : unit -> 'T :> TableEntity)> (table:Table) (connectionstring:ConnectionString) (PartitionKey partionKey) (count:int) =
 
         async {
 
