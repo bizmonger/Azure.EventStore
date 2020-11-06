@@ -7,7 +7,7 @@ open Azure.TableOperations
 open EventStore.Core.Language
 open EventStore.Operations
 open EventStore.Language
-open EventStore.Utils
+open EventStore.Utilities
 
 module EventStore =
 

@@ -7,7 +7,7 @@ open Azure.EventStore.TestAPI
 open Azure.EventStore.TestAPI.Mock
 open Azure.Entities
 open Azure.TableOperations
-open EventStore.Utils
+open EventStore.Utilities
 open EventStore.Core.Language
 
 [<TearDown>]

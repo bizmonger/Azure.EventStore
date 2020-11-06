@@ -3,7 +3,7 @@
 open Azure.TableOperations
 open EventStore.Core.Language
 
-module Utils =
+module Utilities =
 
     let valueFromRowKey       (RowKey       v) = v
     let valueFromPartitionKey (PartitionKey v) = v
