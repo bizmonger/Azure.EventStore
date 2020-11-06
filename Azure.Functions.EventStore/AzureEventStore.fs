@@ -1,9 +1,7 @@
 ﻿namespace Azure
 
 open System
-open System.Linq
 open Microsoft.WindowsAzure.Storage
-open Microsoft.WindowsAzure.Storage.Table
 open Azure.Entities
 open Azure.TableOperations
 open EventStore.Core.Language
@@ -84,7 +82,7 @@ module EventStore =
             with ex -> return Error <| ex.GetBaseException().Message
         }
 
-    let tryAppendSequence (events:Event seq) (connectionstring:ConnectionString) =
+    let tryAppendMultiple (events:Event seq) (connectionstring:ConnectionString) =
 
         async {
 

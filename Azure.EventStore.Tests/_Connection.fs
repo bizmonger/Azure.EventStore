@@ -2,8 +2,8 @@ module Azure.EventStore.Tests
 
 open NUnit.Framework
 
-open Azure.EventStore.TestAPI.Mock
 open Azure
+open Azure.EventStore.TestAPI.Mock
 
 let teardown connection =
 
