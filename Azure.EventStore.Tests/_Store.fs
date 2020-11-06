@@ -36,12 +36,14 @@ let ``Read event from EventStore`` () =
     async {
 
         // Setup
+        let partitionKey = someEvent.Stream |> valueFromStreamId |> PartitionKey
+
         match! someConnectionString |> EventStore.tryAppend someEvent with
         | Error msg -> failwith msg
         | Ok _      ->
 
             // Test
-            match! (someEvent.Stream |> valueFromStreamId |> PartitionKey, 1) ||> TableOperations.tryReadBackwardsCount SomeStreamTable someConnectionString with
+            match! someConnectionString |> TableOperations.tryReadBackwardsCount SomeStreamTable partitionKey 1 with
             | Error msg -> failwith msg
             | Ok events -> events |> Seq.isEmpty |> should equal false
     
@@ -53,12 +55,14 @@ let ``Read last 2 events from EventStore (descending)`` () =
     async {
 
         // Setup
+        let partitionKey = someEvent.Stream |> valueFromStreamId |> PartitionKey
+
         do! someConnectionString |> EventStore.tryAppend someEvent  |> Async.Ignore
         do! someConnectionString |> EventStore.tryAppend someEvent2 |> Async.Ignore
         do! someConnectionString |> EventStore.tryAppend someEvent3 |> Async.Ignore
 
         // Test
-        match! (someEvent.Stream |> valueFromStreamId |> PartitionKey, 2) ||> TableOperations.tryReadBackwardsCount<EventEntity> SomeStreamTable someConnectionString with
+        match! someConnectionString |> EventStore.tryReadBackwardsCount someEvent.Stream 2 with
         | Error msg -> failwith msg
         | Ok events ->
              events |> Seq.map(fun v -> v.Data) |> should equal <| seq [someEvent3.Data; someEvent2.Data]

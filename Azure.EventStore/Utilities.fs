@@ -2,6 +2,7 @@
 
 open Azure.TableOperations
 open EventStore.Core.Language
+open Azure.Entities
 
 module Utilities =
 
@@ -12,3 +13,13 @@ module Utilities =
     let valueFromMeta         (MetaData     v) = v
     let valueFromEventType    (EventType    v) = v
     let valueFromStreamId     (Stream       v) = v
+
+
+    let toEvent(v:EventEntity) : Event = {
+        Id        = v.RowKey
+        Stream    = v.Stream    |> Stream
+        Data      = v.Data      |> JSON |> Data
+        MetaData  = v.MetaData  |> MetaData
+        EventType = v.EventType |> EventType
+        Timestamp = v.Timestamp.Date
+    }

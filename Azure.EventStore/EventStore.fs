@@ -99,13 +99,20 @@ module EventStore =
 
         async {
 
-            let partitionKey = PartitionKey stream
-            let table = Table streamTable
-            match! tryReadBackwards partitionKey table connectionstring with
-            | Error msg -> return Error msg
-            | entities  -> 
+            let partitionKey, table = PartitionKey stream, Table streamTable
 
+            match! connectionstring |> tryReadBackwards<EventEntity> partitionKey table with
+            | Error msg   -> return Error msg
+            | Ok entities -> return Ok (entities |> Seq.map toEvent)
+        }
 
-                return Error "not implemented"
-        
+    let tryReadBackwardsCount (Stream stream) (count:int) (connectionstring:ConnectionString) : AsyncResult<Event seq, ErrorDescription> =
+
+        async {
+
+            let partitionKey, table = PartitionKey stream, Table streamTable
+
+            match! connectionstring |> tryReadBackwardsCount<EventEntity> table partitionKey count with
+            | Error msg   -> return Error msg
+            | Ok entities -> return Ok (entities |> Seq.map toEvent)
         }

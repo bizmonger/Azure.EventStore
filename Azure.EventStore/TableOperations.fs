@@ -239,7 +239,7 @@ module TableOperations =
             with ex -> return Error <| ex.GetBaseException().Message
         }
 
-    let internal tryReadForwardCount<'T when 'T : (new : unit -> 'T :> TableEntity)> (table:Table) (connectionstring:ConnectionString) (PartitionKey partitionKey) (count:int) =
+    let internal tryReadForwardCount<'T when 'T : (new : unit -> 'T :> TableEntity)> (table:Table) (PartitionKey partitionKey) (count:int) (connectionstring:ConnectionString) =
 
         async {
 
@@ -286,7 +286,7 @@ module TableOperations =
             with ex -> return Error <| ex.GetBaseException().Message
         }
 
-    let internal tryReadBackwardsCount<'T when 'T : (new : unit -> 'T :> TableEntity)> (table:Table) (connectionstring:ConnectionString) (PartitionKey partionKey) (count:int) =
+    let internal tryReadBackwardsCount<'T when 'T : (new : unit -> 'T :> TableEntity)> (table:Table) (PartitionKey partionKey) (count:int) (connectionstring:ConnectionString)  =
 
         async {
 
