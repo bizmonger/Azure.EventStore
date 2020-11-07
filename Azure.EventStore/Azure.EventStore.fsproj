@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <Compile Include="Connection.fs" />
-    <Compile Include="TableOperations.fs" />
+    <Compile Include="Table.fs" />
     <Compile Include="Utilities.fs" />
     <Compile Include="EventStore.fs" />
   </ItemGroup>

@@ -5,7 +5,7 @@ open FsUnit
 open Azure
 open Azure.EventStore.TestAPI
 open Azure.EventStore.TestAPI.Mock
-open Azure.TableOperations
+open Azure.Table
 open EventStore.Core.Language
 
 [<TearDown>]

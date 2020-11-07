@@ -1,6 +1,6 @@
 ﻿namespace EventStore
 
-open Azure.TableOperations
+open Azure.Table
 open EventStore.Core.Language
 open Azure.Entities
 

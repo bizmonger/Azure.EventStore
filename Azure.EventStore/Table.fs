@@ -23,7 +23,7 @@ module Entities =
         member val MetaData  = "" with get,set
         member val Data      = "" with get,set
 
-module TableOperations =
+module Table =
 
     type Table            = Table            of string
     type PartitionKey     = PartitionKey     of string

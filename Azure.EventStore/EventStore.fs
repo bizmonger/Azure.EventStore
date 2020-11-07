@@ -3,7 +3,7 @@
 open System
 open Microsoft.WindowsAzure.Storage
 open Azure.Entities
-open Azure.TableOperations
+open Azure.Table
 open EventStore.Core.Language
 open EventStore.Operations
 open EventStore.Language
@@ -123,7 +123,7 @@ module EventStore =
 
             let partitionKey, table = PartitionKey stream, Table streamTable
 
-            match! connectionstring |> TableOperations.tryReadBackwardsCount<EventEntity> table partitionKey 1 with
+            match! connectionstring |> Table.tryReadBackwardsCount<EventEntity> table partitionKey 1 with
             | Error msg   -> return Error msg
             | Ok entities -> return Ok (entities |> Seq.map toEvent)
         }
